@@ -1,7 +1,23 @@
 # Data-oriented Programming paradigms
-## WS 2024
+## Interesting links
+- [Trello](https://trello.com/b/Fz2q4I4f/dopp-ws-24)
+- [Discord](https://discord.com/channels/1308823312335507517/1308823312901607498)
 
-### Set up your environment
+## Corruption
+### Q1
+> *How well can the level of corruption of a country in Europe be quantified?*
+### Q2
+> *What differences are there in actual corruption and perceived corruption?*
+### Q3
+> *Are there different forms of corruption prevalent in different countries in Europe?*
+### Q4 + Q5
+> *hat characteristics of a country predict the level of corruption?*
+
+> *What characteristics of a country predict an increase or decrease in the level of corruption?*
+
+---
+
+## Set up your environment
 
 Right after cloning, please set your environment up. We will be using Python 3.11.10 (same version as in JupyterHub for exercise 1). You can find both a [environment.yml](environment.yml) as well as a [requirements.txt](requirements.txt) file in the root folder.
 
@@ -11,6 +27,7 @@ conda env create -f environment.yml
 
 # If using venv and pip, make sure you have python 3.11.10 installed
 python -m venv .venv
+# >>> activate your environment 
 pip install -r requirements.txt
 ```
 
