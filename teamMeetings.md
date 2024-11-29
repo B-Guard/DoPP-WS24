@@ -16,3 +16,12 @@
     - Each member defines the overview of the DS pipeline to process the data and answer the question
     - After this, results are gathered into the pdf.
 - Set up next meeting for Nov 29th at 9:00
+
+## Nov 29th
+
+- Merged results of datasets per question into a single table
+- Created and exported report, includes
+    - Chosen questions
+    - Table of chosen datasets
+    - Answer planning and work split
+- Next meeting will be in person, coinciding with the review meeting on Dec 6th at 9:30 in HG 01 01
