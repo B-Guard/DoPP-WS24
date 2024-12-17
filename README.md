@@ -2,6 +2,7 @@
 ## Interesting links
 - [Trello](https://trello.com/b/Fz2q4I4f/dopp-ws-24)
 - [Discord](https://discord.com/channels/1308823312335507517/1308823312901607498)
+- [OneDrive](https://tuwienacat-my.sharepoint.com/personal/e12234573_student_tuwien_ac_at/_layouts/15/onedrive.aspx)
 
 ## Corruption
 ### Q1
@@ -11,7 +12,7 @@
 ### Q3
 > *Are there different forms of corruption prevalent in different countries in Europe?*
 ### Q4 + Q5
-> *hat characteristics of a country predict the level of corruption?*
+> *What characteristics of a country predict the level of corruption?*
 
 > *What characteristics of a country predict an increase or decrease in the level of corruption?*
 
