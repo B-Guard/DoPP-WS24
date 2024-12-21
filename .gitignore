@@ -1,7 +1,10 @@
-*.pdf
+# Folders
 __pycache__
 .idea
 .vscode
 .venv
 venv
 
+# Files
+*.pdf
+*.zip
