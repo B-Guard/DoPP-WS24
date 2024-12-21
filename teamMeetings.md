@@ -25,3 +25,11 @@
     - Table of chosen datasets
     - Answer planning and work split
 - Next meeting will be in person, coinciding with the review meeting on Dec 6th at 9:30 in HG 01 01
+
+## Dec 17th [postponed from Dec 5th]
+
+- Directory structure for data location was agreed to start working on the project
+- Usage of git LFS for datasets (even though they are not extremely big)
+    - Agreed on not committing preprocessed datasets, since they can be generated from raw data plus code.
+- Final presentation slot, tentative Jan 28th.
+- Next meeting set on Dec 30th.
