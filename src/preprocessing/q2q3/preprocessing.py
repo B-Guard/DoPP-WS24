@@ -11,7 +11,7 @@ def handle_missing_values(df, strategy='mean'):
                 df[col] = df[col].fillna(df[col].mean())
             elif strategy == 'median':
                 df[col] = df[col].fillna(df[col].median())
-        else:  # Handle strings and mixed types
+        else:
             df[col] = df[col].replace('- ', np.nan)
             try:
                 df[col] = df[col].astype(str).fillna(df[col].mode()[0])
@@ -106,10 +106,13 @@ def main():
     print("Initial DataFrame Info:")
     print(df.info())
 
+    for col in df.columns:
+        if col != 'Country':
+            df[col] = pd.to_numeric(df[col], errors='coerce')
+
     df = handle_missing_values(df, strategy='mean')
-    numerical_columns = ['QB15.1', 'QB15.2', 'QB15.3', 'CPI 2020', 'CPI 2021', 'CPI 2022', 'CPI 2023']
+    numerical_columns = ['QB1', 'QB2', 'QB10', 'QB15.1', 'QB15.2', 'QB15.3', 'CPI 2020', 'CPI 2021', 'CPI 2022', 'CPI 2023']
     df = detect_outliers(df, numerical_columns)
-    df = preprocess_question_data(df)
     df = add_coordinates(df)
 
     categorical_columns = ['Country']
@@ -117,10 +120,13 @@ def main():
     df = df.sort_values(by=categorical_columns)
     df, label_encoders = encode_categorical(df, categorical_columns)
 
+    for col in df.select_dtypes(include=['float64', 'int64']).columns:
+        df[col] = df[col].round(3)
+
     print("Final DataFrame Info:")
     print(df.info())
 
-    output_path = ('..', '..', '..', 'static', 'data', 'EU', 'Eurobarometer', 'preprocessed', 'cleaned_corruption_data.csv')
+    output_path = ('..', '..', '..', 'static', 'data', 'EU', 'eurobarometer', 'preprocessed', 'cleaned_corruption_data.csv')
     df.to_csv(os.path.join(*output_path), index=False)
     print(f"Preprocessed data saved to {os.path.join(*output_path)}")
 
