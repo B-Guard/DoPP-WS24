@@ -15,9 +15,7 @@ def handle_missing_values(df, strategy='mean'):
     return df
 
 def encode_categorical(df, columns):
-    """
-    Encode categorical variables using Label Encoding.
-    """
+
     label_encoders = {}
     for col in columns:
         le = LabelEncoder()
@@ -48,10 +46,16 @@ def detect_outliers(df, columns):
     return df
 
 def create_composite_indices(df):
-    df['public_gift_tolerance_index'] = df[['QB4.1', 'QB4.2', 'QB4.3']].mean(axis=1)
+    """
+    Create composite indices from related features.
+    """
+    df['tolerance_index'] = df[['QB4.1', 'QB4.2', 'QB4.3']].mean(axis=1)
     return df
 
 def preprocess_question_data(df):
+    """
+    Preprocess data for each question based on domain knowledge.
+    """
     # Handle QB1 (binary response: healthcare access)
     df['QB1'] = df['QB1'].fillna(0).astype(int)
 
@@ -71,7 +75,7 @@ def preprocess_question_data(df):
     # Handle QB4.1-QB4.3 (acceptability of corruption actions)
     df[['QB4.1', 'QB4.2', 'QB4.3']] = df[['QB4.1', 'QB4.2', 'QB4.3']].fillna(0)
 
-    # Create a composite index QB4T (public tolerance index)
+    # Create a composite index QB4T (tolerance index)
     df = create_composite_indices(df)
 
     # Handle QB5-QB6 (perception of corruption)
@@ -97,32 +101,27 @@ def preprocess_question_data(df):
 
 def main():
     # Load dataset
-    file_path = os.path.join('../../../static/data/EU/eurobarometer',
-                             'Corruption_ebs_A_v1230.xlsx')
-    df = pd.read_excel(file_path)
+    file_path = ('..', '..', '..', 'static', 'data', 'EU', 'eurobarometer', 'Corruption_ebs_A_v1230.xlsx')
+    df = pd.read_excel(os.path.join(*file_path))
 
     # Step 1: Handle missing values
     df = handle_missing_values(df, strategy='mean')
 
-    categorical_columns = ['Country']
+    # Step 2: Encode categorical variables
+    categorical_columns = ['Country']  # Replace with actual categorical columns
     df, label_encoders = encode_categorical(df, categorical_columns)
 
     # Step 3: Detect and treat outliers
-    numerical_columns = ['QB15.1',
-                         'QB15.2',
-                         'QB15.3',
-                         'CPI 2020',
-                         'CPI 2021',
-                         'CPI 2022',
-                         'CPI 2023']
+    numerical_columns = ['QB15.1', 'QB15.2', 'QB15.3', 'CPI 2020', 'CPI 2021', 'CPI 2022', 'CPI 2023']
     df = detect_outliers(df, numerical_columns)
 
     # Step 4: Preprocess question-specific data
     df = preprocess_question_data(df)
 
-    output_path = os.path.join('../../../static/data/EU/eurobarometer/preprocessed', 'cleaned_corruption_data.csv')
-    df.to_csv(output_path, index=False)
-    print(f"Preprocessed data saved to {output_path}")
+    # Save the cleaned dataset
+    output_path = ('..', '..', '..', 'static', 'data', 'EU', 'eurobarometer', 'cleaned_corruption_data.csv')
+    df.to_csv(os.path.join(*output_path), index=False)
+    print(f"Preprocessed data saved to {os.path.join(*output_path)}")
 
 if __name__ == "__main__":
     main()
