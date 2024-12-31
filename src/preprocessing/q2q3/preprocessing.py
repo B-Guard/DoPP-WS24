@@ -25,7 +25,8 @@ def encode_categorical(df, columns):
         df[col] = df[col].astype(str).str.strip().replace('- ', np.nan)
         df[col] = df[col].fillna('Unknown')
         le = LabelEncoder()
-        df[col] = le.fit_transform(df[col])
+        encoded_col_name = f"{col}_ID"  # New column name for the encoded values
+        df[encoded_col_name] = le.fit_transform(df[col])
         label_encoders[col] = le
     return df, label_encoders
 
