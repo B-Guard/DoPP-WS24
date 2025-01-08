@@ -33,3 +33,8 @@
     - Agreed on not committing preprocessed datasets, since they can be generated from raw data plus code.
 - Final presentation slot, tentative Jan 28th.
 - Next meeting set on Dec 30th.
+
+## Dec 30th
+
+- Merged Q1 and Q4+5 due to similarity (and time constraints)
+- Next meeting for Jan 7th
