@@ -14,7 +14,7 @@ class CPI_Data:
 
 def read_excel_cpi(filename: str, sheet_name: Union[str, int]):
     path = os.path.join("static", "data", "CPI", filename)
-    return pd.read_excel(path, sheetname=sheet_name)
+    return pd.read_excel(path, sheet_name=sheet_name)
 
 
 def clean_rows(data: pd.DataFrame, from_row: int = 2):
