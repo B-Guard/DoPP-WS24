@@ -6,12 +6,6 @@ import pandas as pd
 from typing import Union
 
 
-class CPI_Data:
-    yearly_data: pd.DataFrame
-    timeseries: pd.DataFrame
-    stat_sig_changes: pd.DataFrame
-
-
 def read_excel_cpi(filename: str, sheet_name: Union[str, int]):
     path = os.path.join("static", "data", "CPI", filename)
     return pd.read_excel(path, sheet_name=sheet_name)
@@ -37,33 +31,45 @@ def enforce_type(data: pd.DataFrame):
     return data
 
 
+def load_cpi(filename: str, sheetname: str, from_row: int = 1):
+    return enforce_type(clean_rows(read_excel_cpi(filename, sheetname), from_row))
+
+
+def load_all_cpi():
+    return {
+        2020: load_cpi("CPI2020_GlobalTablesTS_210125.xlsx", "CPI2020"),
+        2021: load_cpi("CPI2021_GlobalResults&Trends.xlsx", "CPI 2021"),
+        2022: load_cpi("CPI2022_GlobalResultsTrends.xlsx", "CPI 2022 (final)"),
+        2023: load_cpi("CPI2023_Global_Results__Trends.xlsx", "CPI 2023", 2),
+    }
+
+def concat_cpis(dfs: dict):
+
+    # Rename columns to ensure correct concatenation
+    for _, df in dfs.items():
+        for col in df.columns:
+            if col.startswith("CPI score"):
+                df.rename(columns={col: "CPI score"}, inplace=True)
+            if col.startswith("Country /"):
+                df.rename(columns={col: "Country"}, inplace=True)
+    
+    # Add a new column for the year and place it between "Region" and "CPI Score"
+    for year, df in dfs.items():
+        df.insert(3, "Year", year)
+
+    return pd.concat(dfs.values(), ignore_index=True)
+
+
 # %%
 
 if __name__ == "__main__":
-    cpi_2023 = enforce_type(
-        clean_rows(read_excel_cpi("CPI2023_Global_Results__Trends.xlsx", "CPI 2023"))
-    )
-    print(cpi_2023.dtypes)
-    print()
+    cpi_data = load_all_cpi()
 
-    cpi_2022 = enforce_type(
-        clean_rows(
-            read_excel_cpi("CPI2022_GlobalResultsTrends.xlsx", "CPI 2022 (final)"), 1
-        )
-    )
-    print(cpi_2022.dtypes)
-    print()
+    # Concatenate all the dataframes
+    cpi = concat_cpis(cpi_data)
 
-    cpi_2021 = enforce_type(
-        clean_rows(read_excel_cpi("CPI2021_GlobalResults&Trends.xlsx", "CPI 2021"), 1)
-    )
-    print(cpi_2021.dtypes)
-    print()
+    # Save preprocessed data
+    cpi.to_csv("static/data/CPI/_cpi.csv", index=False)
 
-    cpi_2020 = enforce_type(
-        clean_rows(read_excel_cpi("CPI2020_GlobalTablesTS_210125.xlsx", "CPI2020"), 1)
-    )
-    print(cpi_2020.dtypes)
-    print()
 
 # %%
