@@ -37,22 +37,33 @@ def load_cpi(filename: str, sheetname: str, from_row: int = 1):
 
 def load_all_cpi():
     return {
+        2019: load_cpi("CPI2019-1.xlsx", "CPI2019"),
         2020: load_cpi("CPI2020_GlobalTablesTS_210125.xlsx", "CPI2020"),
         2021: load_cpi("CPI2021_GlobalResults&Trends.xlsx", "CPI 2021"),
         2022: load_cpi("CPI2022_GlobalResultsTrends.xlsx", "CPI 2022 (final)"),
         2023: load_cpi("CPI2023_Global_Results__Trends.xlsx", "CPI 2023", 2),
     }
 
-def concat_cpis(dfs: dict):
 
+def concat_cpis(dfs: dict):
     # Rename columns to ensure correct concatenation
     for _, df in dfs.items():
         for col in df.columns:
             if col.startswith("CPI score"):
                 df.rename(columns={col: "CPI score"}, inplace=True)
-            if col.startswith("Country /"):
+            elif col.startswith("Country /"):
                 df.rename(columns={col: "Country"}, inplace=True)
-    
+            elif col.startswith("standard error"):
+                df.rename(columns={col: "Standard error"}, inplace=True)
+            elif col.startswith("Global Insight"):
+                df.rename(
+                    columns={col: "Global Insights Country Risk Ratings"}, inplace=True
+                )
+            elif col.startswith("Freedom House Nations in Transit Ratings"):
+                df.rename(
+                    columns={col: "Freedom House Nations in Transit"}, inplace=True
+                )
+
     # Add a new column for the year and place it between "Region" and "CPI Score"
     for year, df in dfs.items():
         df.insert(3, "Year", year)
