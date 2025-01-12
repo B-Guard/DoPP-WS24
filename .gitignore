@@ -13,3 +13,4 @@ _*.xlsx
 _*.csv
 _*.dta
 *.log
+main.py
