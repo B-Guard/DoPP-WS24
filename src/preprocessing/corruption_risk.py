@@ -147,7 +147,6 @@ def concat_public_integrity(df: list):
 if __name__ == "__main__":
     transparency = read_excel("Transparency Index.xlsx", "T-Index scores")
     transparency = cleaning_transparency(transparency)
-    print(transparency.head())
 
     # crf = read_excel("Corruption Risk Forecast.xlsx", "FORECAST")
     # crf = cleaning_crf(crf)
