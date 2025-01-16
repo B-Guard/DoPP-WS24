@@ -21,7 +21,7 @@ clean_data = clean_data[~clean_data["GEO"].str.contains("TIME|Dataset|Last updat
 
 # Entferne unnötige Zeilen und Spalten
 clean_data = clean_data.iloc[1:, :]  # Überspringe die ersten Zeilen (Meta-Daten)
-relevant_columns = ["GEO"] + [col for idx, col in enumerate(columns[1:]) if idx % 2 == 0]  # Jede zweite Spalte
+relevant_columns = ["GEO"] + [col for idx, col in enumerate(columns[1:]) if idx % 1 == 0]  # Jede zweite Spalte
 clean_data = clean_data[relevant_columns]
 
 # Benenne die Jahres-Spalten korrekt
