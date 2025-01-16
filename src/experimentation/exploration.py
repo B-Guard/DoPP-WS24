@@ -9,7 +9,16 @@ def read_cpi():
     return pd.read_csv(os.path.join("static", "data", "CPI", "_cpi.csv"))
 
 
+def read_transparency():
+    return pd.read_csv(
+        os.path.join("static", "data", "CorruptionRisk", "_Transparency.csv")
+    )
+
+
 def data_exploration(data: pd.DataFrame, year: int):
+    """
+    CPI Data exploration
+    """
     df = data[data["Year"] == year]
 
     # Histograms of all metrics (column 8 onwards)
@@ -154,11 +163,72 @@ def table_fullness(df: pd.DataFrame):
     # )
 
 
+def data_exploration_transparency(transp: pd.DataFrame, cpi_data: pd.DataFrame):
+    """
+    Transparency Data exploration
+    """
+    # Get a mapping of iso3 to region
+    iso3_to_region = cpi_data.set_index("ISO3")["Region"].to_dict()
+
+    # Add region to transparency data
+    transp["Region"] = transp["ISO3"].map(iso3_to_region)
+
+    de_facto_de_jure_stacked(transp, 2023)
+
+
+def de_facto_de_jure_stacked(df: pd.DataFrame, year: int):
+    # Filter data for the specified year
+    df_year = df[df["Year"] == year]
+
+    # Melt the DataFrame to long format for seaborn
+    df_melted = df_year.melt(
+        id_vars=["Country", "Region"],
+        value_vars=["df_fulfillment", "dj_fulfillment"],
+        var_name="Score Type",
+        value_name="Score",
+    )
+
+    # Sort by df_totalscore in descending order
+    df_melted = df_melted.sort_values(by="Score", ascending=False)
+
+    # Create a FacetGrid with one subplot per region
+    g = sns.FacetGrid(
+        df_melted,
+        col="Region",
+        col_wrap=3,
+        sharex=True,
+        sharey=False,
+        height=4,
+        aspect=1.5,
+    )
+    g.map_dataframe(
+        sns.barplot,
+        y="Country",
+        x="Score",
+        hue="Score Type",
+        palette="viridis",
+        errorbar=None,
+        orient="h"
+    )
+
+    # Adjust the plot
+    g.add_legend(title="Score Type")
+    g.set_titles("{col_name}")
+    g.set_xticklabels(rotation=0)
+    g.set_axis_labels("Score", "Country")
+    plt.subplots_adjust(top=0.9)
+    g.figure.suptitle("De facto and De jure scores by Region", fontsize=16)
+    plt.show()
+
 def main():
     cpi_data = read_cpi()
-    data_exploration(cpi_data, 2023)
+    transparency_data = read_transparency()
 
-    table_fullness(cpi_data)
+    # data_exploration(cpi_data, 2023)
+
+    # table_fullness(cpi_data)
+
+    data_exploration_transparency(transparency_data, cpi_data)
 
 
 if __name__ == "__main__":
