@@ -44,14 +44,28 @@ if __name__ == "__main__":
             os.path.join("static", "data", "CorruptionRisk", "_PublicIntegrity.csv")
         )
     )
-    q1q45 = final_pass(
-        pd.merge(
-            pd.merge(cpi, transparency, on=["ISO3", "Year"], how="outer"),
-            public_integrity,
-            on=["ISO3", "Year"],
-            how="outer",
+
+    eurostat = pd.read_excel(
+        os.path.join(
+            "static",
+            "data",
+            "EU",
+            "Eurostat",
+            "Q4_Merged",
+            "Eurostat_Merged_Dataset.xlsx",
         )
     )
+    # Rename GEO col for Country
+    eurostat = eurostat.rename(columns={"GEO": "Country"})
+
+    q1 = pd.merge(
+        pd.merge(cpi, transparency, on=["ISO3", "Year"], how="outer"),
+        public_integrity,
+        on=["ISO3", "Year"],
+        how="outer",
+    )
+
+    q1q45 = final_pass(pd.merge(q1, eurostat, on=["Country", "Year"], how="outer"))
 
     q1q45.to_csv(os.path.join("static", "data", "_q1q45.csv"), index=False)
 
