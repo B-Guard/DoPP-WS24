@@ -191,7 +191,8 @@ def data_exploration_transparency(transp: pd.DataFrame, cpi_data: pd.DataFrame):
     # Add region to transparency data
     transp["Region"] = transp["ISO3"].map(iso3_to_region)
 
-    de_facto_de_jure_stacked(transp, 2023)
+    # de_facto_de_jure_stacked(transp, 2023)
+    de_facto_de_jure_colored(transp, 2023)
 
 
 def de_facto_de_jure_stacked(df: pd.DataFrame, year: int):
@@ -238,11 +239,52 @@ def de_facto_de_jure_stacked(df: pd.DataFrame, year: int):
     g.figure.suptitle("De facto and De jure scores by Region", fontsize=16)
     plt.show()
 
+
+def de_facto_de_jure_colored(df: pd.DataFrame, year: int):
+    # Filter data for the specified year
+    df_year = df[df["Year"] == year]
+
+    # Sort by df_fulfillment in descending order
+    df_year = df_year.sort_values(by="df_fulfillment", ascending=False)
+
+    # Melt the DataFrame to long format for seaborn
+    df_melted = df_year.melt(
+        id_vars=["Country", "Region"],
+        value_vars=["df_fulfillment", "dj_fulfillment"],
+        var_name="Score Type",
+        value_name="Score",
+    )
+
+    # Create a bar plot
+    plt.figure(figsize=(10, 24))
+    barplot = sns.barplot(
+        data=df_melted,
+        x="Score",
+        y="Country",
+        hue="Score Type",
+        palette="viridis",
+        errorbar=None,
+    )
+
+    # Color the country labels for EU countries
+    for i, country in enumerate(df_year["Country"]):
+        if df_year.iloc[i]["Region"] == "WE/EU":
+            barplot.get_yticklabels()[i].set_color("red")
+
+    # Adjust the plot
+    plt.title("De facto and De jure scores by country")
+    plt.xlabel("Score")
+    plt.ylabel("Country")
+    plt.legend(title="Score Type", bbox_to_anchor=(1.05, 1), loc="upper left")
+    plt.tight_layout()
+    plt.show()
+
+
 def main():
     cpi_data = read_cpi()
     transparency_data = read_transparency()
 
-    # data_exploration(cpi_data, 2023)
+    data_exploration(cpi_data, 2023)
 
     # table_fullness(cpi_data)
 
