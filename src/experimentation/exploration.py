@@ -33,6 +33,9 @@ def data_exploration(data: pd.DataFrame, year: int):
     # Boxplot showing the source fullness per region
     # source_fullness(df)
 
+    # Correlation matrix of CPI sources
+    # corr_map(df)
+
     return
 
 
@@ -123,6 +126,21 @@ def source_fullness(df: pd.DataFrame):
     plt.tight_layout()
     plt.show()
 
+def corr_map(df: pd.DataFrame):
+    """
+    Correlation matrix of CPI sources
+    """
+    numeric_cols = df.columns[10:]
+
+    # Calculate correlation matrix
+    corr = df[numeric_cols].corr()
+
+    # Plot heatmap with symmetric colormap centered at 0
+    plt.figure(figsize=(12, 8))
+    sns.heatmap(corr, cmap="coolwarm", annot=True, fmt=".2f", center=0)
+    plt.title("Correlation Matrix of CPI Sources")
+    plt.tight_layout()
+    plt.show()
 
 def table_fullness(df: pd.DataFrame):
     """
