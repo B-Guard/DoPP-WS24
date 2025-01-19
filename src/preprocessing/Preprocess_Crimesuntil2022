@@ -1,0 +1,84 @@
+import os
+import pandas as pd
+
+# Input-Datei und Zielordner
+input_file = "DoPP-WS24/static/data/EU/Eurostat/Recorded-Crimes-until2022.xlsx"
+output_folder = "DoPP-WS24/static/data/EU/Eurostat/Cleaned-Crimes-until2022"
+os.makedirs(output_folder, exist_ok=True)
+
+# Sheets, die verarbeitet werden sollen (jedes zweite Sheet)
+sheets_to_process = [f"Sheet {i}" for i in range(1, 25, 2)]
+
+# Initialisiere leeres DataFrame für das zusammengeführte Dataset
+merged_data = pd.DataFrame()
+
+def preprocess_sheet(sheet_name, df):
+    """
+    Bereinigt ein einzelnes Sheet und formatiert die Daten in ein Long-Format.
+    """
+    try:
+        # Entferne leere Zeilen und Spalten
+        df = df.dropna(how="all").reset_index(drop=True)
+
+        # Setze die Header-Zeile und passe Spalten an
+        columns = ["GEO"] + [f"Year_{i}" for i in range(2013, 2023)] + [f"Unused_{i}" for i in range(2013, 2023)]
+        df.columns = columns[:len(df.columns)]
+
+        # Entferne irrelevante Zeilen
+        df = df.dropna(subset=["GEO"])
+        df = df[~df["GEO"].str.contains("TIME|Dataset|Last updated|Unit|Source", na=False)]
+        df = df[~df["GEO"].str.match(r"^\d+$", na=False)]
+
+        # Extrahiere relevante Spalten (jede zweite Spalte ab Spalte 2)
+        relevant_columns = ["GEO"] + [col for idx, col in enumerate(df.columns[1:]) if idx % 2 == 0]
+        df = df[relevant_columns]
+
+        # Benenne die Jahres-Spalten korrekt (2013, 2014, ...)
+        df.columns = ["GEO"] + [str(year) for year in range(2013, 2013 + len(relevant_columns) - 1)]
+
+        # Konvertiere Werte zu Float
+        for col in df.columns[1:]:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
+
+        # Entferne Zeilen mit komplett fehlenden Werten
+        df = df.dropna(how="all", subset=df.columns[1:])
+
+        # Transformiere die Daten in ein Long-Format
+        df = pd.melt(df, id_vars=["GEO"], var_name="Year", value_name="Value")
+
+        # Entferne Zeilen mit fehlenden Werten
+        df = df.dropna(subset=["Value"])
+
+        return df
+    except Exception as e:
+        print(f"Fehler beim Verarbeiten von Sheet {sheet_name}: {e}")
+        return None
+
+# Verarbeite jedes zweite Sheet
+for sheet_name in sheets_to_process:
+    print(f"Verarbeite Sheet: {sheet_name}")
+    try:
+        # Lade das aktuelle Sheet
+        df = pd.read_excel(input_file, sheet_name=sheet_name, engine="openpyxl", header=None)
+
+        # Bereinige das Sheet
+        processed_df = preprocess_sheet(sheet_name, df)
+
+        if processed_df is not None:
+            # Füge das bereinigte Sheet zu den zusammengeführten Daten hinzu
+            merged_data = pd.concat([merged_data, processed_df], ignore_index=True)
+    except Exception as e:
+        print(f"Fehler beim Laden von Sheet {sheet_name}: {e}")
+
+# Überprüfen, ob merged_data nicht leer ist
+if not merged_data.empty:
+    # Summiere die Werte für jedes Land und Jahr
+    aggregated_data = merged_data.groupby(["GEO", "Year"], as_index=False).sum()
+
+    # Speichere das bereinigte Dataset
+    output_file = os.path.join(output_folder, "Recorded_Crimes_Total.xlsx")
+    aggregated_data.to_excel(output_file, index=False)
+
+    print(f"Das bereinigte Dataset wurde erfolgreich gespeichert: {output_file}")
+else:
+    print("Keine Daten zum Speichern gefunden.")
