@@ -1,25 +1,25 @@
 import pandas as pd
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestRegressor
+import numpy as np
+from sklearn.model_selection import KFold
+from xgboost import XGBRegressor
 from sklearn.metrics import mean_squared_error, r2_score
-
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning, module="xgboost")
 # Load the dataset
-data_path = "DoPP-WS24/static/data/EU/Eurostat/FullMergedDatasetQ1Q4/_MergedDataset.csv"
-data = pd.read_csv(data_path)
+dataset_path = "DoPP-WS24\\static\\data\\EU\\Eurostat\\FullMergedDatasetQ1Q4\\_MergedDataset.csv"
+data = pd.read_csv(dataset_path)
 
-# Inspect the dataset
+# Dataset preview
 print("Dataset preview:")
 print(data.head())
 
-# Select target and relevant features
-target = "df_fulfillment"
+# Select relevant features and target
 selected_features = [
     "Unemployment_Rate",
     "Upper_Secondary_Vocational_Education_Level",
     "Upper_Secondary_General_Education_Level",
     "Upper_Secondary_Education_Level",
     "Less_Primary_Education_Level",
-    "Upper_Secondary_and_Tertiary_Education_Level",
     "Tertiary_Education_Level",
     "Crime_Rate",
     "GDP_Per_Capita",
@@ -32,38 +32,92 @@ selected_features = [
     "life expectancy",
 ]
 
+target_column = "df_fulfillment"
+
+# Filter dataset for selected columns
+data = data[selected_features + [target_column]].copy()
+
+# Drop rows with missing target values
+data = data.dropna(subset=[target_column])
+
+# Fill missing values in features
+numeric_features = data.select_dtypes(include=["float64", "int64"]).columns
+data[numeric_features] = data[numeric_features].fillna(data[numeric_features].mean())
+
+# Define features (X) and target (y)
 X = data[selected_features]
-y = data[target]
+y = data[target_column]
 
-# Handle missing values
-X = X.fillna(X.mean())  # Replace missing values in features with the column mean
-y = y.fillna(y.mean())  # Replace missing values in target with the column mean
+# Initialize manual grid search for XGBoost
+kf = KFold(n_splits=5, shuffle=True, random_state=42)
+best_score = -float("inf")
+best_params = None
 
-# Split data into training and test sets
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+# Parameter grid for XGBoost
+param_grid = {
+    "n_estimators": [100, 200, 300],
+    "learning_rate": [0.05, 0.1],
+    "max_depth": [3, 5],
+    "subsample": [0.8, 1.0],
+}
 
-# Train a Random Forest model
-model = RandomForestRegressor(random_state=42, n_estimators=100)
-model.fit(X_train, y_train)
+# Perform manual cross-validation
+for n_estimators in param_grid["n_estimators"]:
+    for learning_rate in param_grid["learning_rate"]:
+        for max_depth in param_grid["max_depth"]:
+            for subsample in param_grid["subsample"]:
+                model = XGBRegressor(
+                    n_estimators=n_estimators,
+                    learning_rate=learning_rate,
+                    max_depth=max_depth,
+                    subsample=subsample,
+                    random_state=42,
+                    use_label_encoder=False,
+                )
+                cv_scores = []
+                for train_idx, val_idx in kf.split(X):
+                    X_train, X_val = X.iloc[train_idx], X.iloc[val_idx]
+                    y_train, y_val = y.iloc[train_idx], y.iloc[val_idx]
+                    model.fit(X_train, y_train)
+                    predictions = model.predict(X_val)
+                    cv_scores.append(r2_score(y_val, predictions))
+                mean_score = np.mean(cv_scores)
+                if mean_score > best_score:
+                    best_score = mean_score
+                    best_params = {
+                        "n_estimators": n_estimators,
+                        "learning_rate": learning_rate,
+                        "max_depth": max_depth,
+                        "subsample": subsample,
+                    }
 
-# Make predictions
-y_pred = model.predict(X_test)
+# Train the final model with the best parameters
+final_model = XGBRegressor(
+    **best_params,
+    random_state=42,
+)
+final_model.fit(X, y)
 
-# Evaluate the model
-mse = mean_squared_error(y_test, y_pred)
-r2 = r2_score(y_test, y_pred)
+# Evaluate the final model
+predictions = final_model.predict(X)
+mse = mean_squared_error(y, predictions)
+r2 = r2_score(y, predictions)
 
-print(f"Mean Squared Error: {mse}")
-print(f"R² Score: {r2}")
+# Output results
+print("Best Parameters:", best_params)
+print("Mean Squared Error:", mse)
+print("R² Score:", r2)
 
-# Feature importance
-feature_importances = pd.DataFrame({
-    "Feature": selected_features,
-    "Importance": model.feature_importances_
-}).sort_values(by="Importance", ascending=False)
+# Feature importances
+feature_importances = pd.DataFrame(
+    {"Feature": X.columns, "Importance": final_model.feature_importances_}
+).sort_values(by="Importance", ascending=False)
 
 print("Feature importances:")
 print(feature_importances)
 
 # Save feature importances to a CSV file
-feature_importances.to_csv("Feature_Importances_Selected.csv", index=False)
+output_path = "DoPP-WS24\src\model_training\\feature_importances.csv"  # Specify the desired output file path
+feature_importances.to_csv(output_path, index=False)
+
+print(f"Feature importances saved to {output_path}")
