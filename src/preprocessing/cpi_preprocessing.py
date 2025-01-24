@@ -39,7 +39,7 @@ def load_all_cpi():
     return {
         2019: load_cpi("CPI2019-1.xlsx", "CPI2019"),
         2020: load_cpi("CPI2020_GlobalTablesTS_210125.xlsx", "CPI2020"),
-        2021: load_cpi("CPI2021_GlobalResults&Trends.xlsx", "CPI 2021"),
+        2021: load_cpi("CPI2021_GlobalResults_Trends.xlsx", "CPI 2021"),
         2022: load_cpi("CPI2022_GlobalResultsTrends.xlsx", "CPI 2022 (final)"),
         2023: load_cpi("CPI2023_Global_Results__Trends.xlsx", "CPI 2023", 2),
     }
