@@ -4,11 +4,31 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+# Question dictionary for better plot titles
+QUESTION_DICT = {
+    "QB1": "Visited Public Healthcare Practitioner (Last 12 Months)",
+    "QB2": "Extra Payment or Gift to Public Healthcare Practitioner",
+    "QB3": "Description of Extra Payment Incident",
+    "QB4.1": "Acceptability of Giving Money (Public Services)",
+    "QB4.2": "Acceptability of Giving a Gift (Public Services)",
+    "QB4.3": "Acceptability of Doing a Favor (Public Services)",
+    "QB4T": "Tolerance Index to Corruption",
+    "QB5": "Perceived Widespread Corruption",
+    "QB6": "Corruption Trend in the Last 3 Years",
+    "QB7": "Corruption Widespread in Sectors",
+    "QB8": "Knows Someone Who Takes Bribes",
+    "QB10": "Knows Where to Report Corruption",
+    "QB12": "Experienced or Witnessed Corruption",
+    "QB_avg": "Average of All QB Questions",
+    "CPI_avg": "Average Corruption Perception Index (2020-2023)",
+    "CPI_percent_change": "CPI Percent Change (2020-2023)",
+    "Latitude": "Latitude (Country)",
+    "Longitude": "Longitude (Country)",
+}
 
 # Load preprocessed data
 def load_preprocessed_data(file_path):
     return pd.read_csv(file_path)
-
 
 # Descriptive statistics
 def descriptive_statistics(df):
@@ -18,7 +38,6 @@ def descriptive_statistics(df):
     print(stats)
     stats.to_csv("descriptive_statistics.csv")
     print("Saved descriptive statistics to descriptive_statistics.csv")
-
 
 # Generate heatmaps
 def create_heatmaps(df, numerical_columns):
@@ -62,8 +81,8 @@ def create_geographical_heatmap(df, value_column):
     scatter = plt.scatter(df["Longitude"], df["Latitude"], c=df[value_column], cmap="viridis", s=100, alpha=0.75)
     for _, row in df.iterrows():
         plt.text(row["Longitude"] + 0.2, row["Latitude"], row["Country"], fontsize=8)
-    plt.colorbar(scatter, label=value_column)
-    plt.title(f"Heatmap of {value_column} by Geographical Coordinates")
+    plt.colorbar(scatter, label=QUESTION_DICT.get(value_column, value_column))
+    plt.title(f"Heatmap of {QUESTION_DICT.get(value_column, value_column)} by Geographical Coordinates")
     plt.xlabel("Longitude")
     plt.ylabel("Latitude")
     plt.grid(True)
@@ -71,8 +90,6 @@ def create_geographical_heatmap(df, value_column):
     plt.show()
     print(f"Saved heatmap of {value_column} to heatmap_{value_column}.png")
 
-
-# Bar plots per country
 def histograms_per_country(df, question_columns):
     for question in question_columns:
         plt.figure(figsize=(12, 8))
@@ -92,6 +109,13 @@ def histograms_per_country(df, question_columns):
         print(f"Saved bar plot for {question} by country to barplot_{question}_by_country.png")
 
 
+# Pairplot for selected variables
+def create_pairplot(df, columns):
+    sns.pairplot(df[columns], diag_kind="kde", corner=True)
+    plt.savefig("pairplot.png")
+    plt.show()
+    print("Saved pairplot to pairplot.png")
+
 # CPI bar plots
 def cpi_bar_plot(df, cpi_columns):
     melted_df = df.melt(id_vars=["Country"], value_vars=cpi_columns, var_name="Year", value_name="CPI")
@@ -107,21 +131,52 @@ def cpi_bar_plot(df, cpi_columns):
     print("Saved CPI bar plot to cpi_bar_plot.png")
 
 
-# Additional measurements
-def additional_measurements(df):
-    # Group by Country and compute mean for all numerical columns
-    country_means = df.groupby("Country").mean()
-    print("Country-wise Mean Values:")
-    print(country_means)
-    country_means.to_csv("country_means.csv")
-    print("Saved country-wise mean values to country_means.csv")
+# Line Plot for Trends Over Time
+def line_plot_cpi(df, cpi_columns):
+    melted_df = df.melt(id_vars=["Country"], value_vars=cpi_columns, var_name="Year", value_name="CPI")
+    plt.figure(figsize=(15, 8))
+    sns.lineplot(data=melted_df, x="Year", y="CPI", hue="Country", marker="o")
+    plt.title("CPI Trends Over Time by Country")
+    plt.xlabel("Year")
+    plt.ylabel("CPI")
+    plt.legend(loc='center left', bbox_to_anchor=(1, 0.5), title="Country")  # Move legend to the right
+    plt.tight_layout()
+    plt.savefig("cpi_trends.png")
+    plt.show()
+    print("Saved CPI trends line plot to cpi_trends.png")
+
+# Histogram of Composite Scores
+def histogram_composite_scores(df, columns):
+    for col in columns:
+        plt.figure(figsize=(10, 6))
+        sns.histplot(df[col], kde=True, bins=20)
+        plt.title(f"Distribution of {QUESTION_DICT.get(col, col)}")
+        plt.xlabel(QUESTION_DICT.get(col, col))
+        plt.ylabel("Frequency")
+        plt.tight_layout()
+        plt.savefig(f"histogram_{col}.png")
+        plt.show()
+        print(f"Saved histogram for {col} to histogram_{col}.png")
+
+# Histogram per country for CPI by year
+def cpi_histograms_by_country(df, cpi_columns):
+    for year_column in cpi_columns:
+        plt.figure(figsize=(15, 8))
+        sns.histplot(data=df, x=year_column, hue="Country", multiple="stack", palette="viridis", kde=False, bins=20)
+        plt.title(f"Histogram of {year_column} by Country")
+        plt.xlabel(QUESTION_DICT.get(year_column, year_column))
+        plt.ylabel("Frequency")
+        plt.legend(title="Country", loc="upper right", bbox_to_anchor=(1.15, 1))
+        plt.tight_layout()
+        plt.savefig(f"cpi_histogram_{year_column}.png")
+        plt.show()
+        print(f"Saved histogram for {year_column} to cpi_histogram_{year_column}.png")
 
 
-# Main function
+
 def main():
-    file_path = (
-        '..', '..', '..', 'static', 'data', 'EU', 'eurobarometer', 'preprocessed', 'cleaned_corruption_data.csv')
-    df = load_preprocessed_data(os.path.join(*file_path))
+    file_path = os.path.join('..', '..', '..', 'static', 'data', 'EU', 'eurobarometer', 'preprocessed', 'cleaned_corruption_data_v2.csv')
+    df = load_preprocessed_data(file_path)
 
     # Descriptive Statistics
     descriptive_statistics(df)
@@ -139,16 +194,24 @@ def main():
     for col in ["QB1", "QB2", "QB10"]:
         create_geographical_heatmap(df, col)
 
-    # Bar Plots per Country
-    question_columns = ["QB1", "QB2", "QB10"]
-    histograms_per_country(df, question_columns)
+    # Pairplot for Selected Variables
+    pairplot_columns = ["QB1", "QB2", "QB10", "CPI 2020", "CPI 2023"]
+    create_pairplot(df, pairplot_columns)
 
     # CPI Bar Plot
     cpi_columns = ["CPI 2020", "CPI 2021", "CPI 2022", "CPI 2023"]
     cpi_bar_plot(df, cpi_columns)
 
-    # Additional Measurements
-    additional_measurements(df)
+    # Line Plot for CPI Trends
+    cpi_columns = ["CPI 2020", "CPI 2021", "CPI 2022", "CPI 2023"]
+    line_plot_cpi(df, cpi_columns)
+
+    # Histogram per country for CPI by year
+    # cpi_histograms_by_country(df, cpi_columns)
+
+    # Histogram of Composite Scores
+    composite_columns = ["QB_avg", "CPI_avg"]
+    histogram_composite_scores(df, composite_columns)
 
 
 if __name__ == "__main__":
