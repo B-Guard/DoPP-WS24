@@ -1,6 +1,9 @@
 import os
 import pandas as pd
 import numpy as np
+import matplotlib
+matplotlib.use("Agg")
+
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -110,11 +113,24 @@ def histograms_per_country(df, question_columns):
 
 
 # Pairplot for selected variables
+# Pairplot for selected variables with better axis titles
 def create_pairplot(df, columns):
-    sns.pairplot(df[columns], diag_kind="kde", corner=True)
-    plt.savefig("pairplot.png")
+    # Map column codes to descriptive titles with line breaks
+    column_titles = [QUESTION_DICT.get(col, col).replace(" ", "\n") for col in columns]
+    df_renamed = df[columns].rename(columns=dict(zip(columns, column_titles)))
+
+    # Create pairplot
+    g = sns.pairplot(df_renamed, diag_kind="kde", corner=True, height=3)  # Adjust height for larger plots
+
+    # Adjust plot settings for better readability
+    g.fig.set_size_inches(12, 12)  # Increase the figure size
+    g.fig.subplots_adjust(top=0.95)  # Adjust space for title
+    g.fig.suptitle("Pairplot of Selected Questions with Descriptive Titles", fontsize=16)
+
+    # Save and display the pairplot
+    plt.savefig("pairplot_with_readable_titles.png", dpi=300)  # High-resolution save
     plt.show()
-    print("Saved pairplot to pairplot.png")
+    print("Saved pairplot with readable titles to pairplot_with_readable_titles.png")
 
 # CPI bar plots
 def cpi_bar_plot(df, cpi_columns):
@@ -172,6 +188,21 @@ def cpi_histograms_by_country(df, cpi_columns):
         plt.show()
         print(f"Saved histogram for {year_column} to cpi_histogram_{year_column}.png")
 
+def bar_plot_by_country(df, question_columns):
+    for question in question_columns:
+        plt.figure(figsize=(12, 8))
+
+        grouped_data = df.groupby('Country')[question].mean().sort_values()
+
+        grouped_data.plot(kind='bar', color='skyblue', edgecolor='black')
+        plt.title(f"Bar Plot of {QUESTION_DICT.get(question, question)} by Country")
+        plt.xlabel("Country")
+        plt.ylabel(QUESTION_DICT.get(question, question))
+        plt.xticks(rotation=45, ha='right')
+        plt.tight_layout()
+        plt.savefig(f"barplot_{question}_by_country.png")
+        plt.show()
+        print(f"Saved bar plot for {question} by country to barplot_{question}_by_country.png")
 
 
 def main():
@@ -206,13 +237,13 @@ def main():
     cpi_columns = ["CPI 2020", "CPI 2021", "CPI 2022", "CPI 2023"]
     line_plot_cpi(df, cpi_columns)
 
-    # Histogram per country for CPI by year
-    # cpi_histograms_by_country(df, cpi_columns)
+    # Bar Plots for QB1, QB2, and QB3 by Country
+    question_columns = ["QB1", "QB2"]
+    bar_plot_by_country(df, question_columns)
 
     # Histogram of Composite Scores
     composite_columns = ["QB_avg", "CPI_avg"]
     histogram_composite_scores(df, composite_columns)
-
 
 if __name__ == "__main__":
     main()
